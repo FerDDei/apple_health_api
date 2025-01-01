@@ -29,6 +29,7 @@ def receive_apple_health_data():
         return jsonify({"error": "No JSON data received"}), 400
     
     # Store the data in memory (for demonstration)
+    apple_health_data_store.clear()  # clear previous data
     apple_health_data_store.append(data)
 
     return jsonify({"message": "Data received successfully", "data": data}), 201
