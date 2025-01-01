@@ -9,7 +9,8 @@ apple_health_data_store = []
 def index():
     return (
         "Welcome to the Apple Health Data API! "
-        "POST data to /applehealth and GET from /applehealth"
+        "POST data to /applehealth, GET from /applehealth, "
+        "and DELETE /applehealth to clear stored data."
     ), 200
 
 @app.route('/applehealth', methods=['POST'])
@@ -38,6 +39,14 @@ def get_apple_health_data():
     Returns all Apple Health data stored so far in JSON format.
     """
     return jsonify(apple_health_data_store), 200
+
+@app.route('/applehealth', methods=['DELETE'])
+def clear_apple_health_data():
+    """
+    Clears all Apple Health data from the in-memory store.
+    """
+    apple_health_data_store.clear()
+    return jsonify({"message": "All Apple Health data has been cleared."}), 200
 
 if __name__ == '__main__':
     # Run the Flask application (development server)
