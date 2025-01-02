@@ -5,6 +5,39 @@ app = Flask(__name__)
 # In-memory data store for demonstration (not recommended for production)
 apple_health_data_store = []
 
+# Desired metric order
+METRICS_ORDER = [
+    "active_energy",
+    "step_count",
+    "apple_exercise_time",
+    "dietary_water"
+]
+
+def reorder_metrics(data_obj):
+    """
+    Reorders the 'data.metrics' array in data_obj according to METRICS_ORDER.
+    If additional metrics exist, they won't appear in the final list (you can
+    modify logic to handle extras if needed).
+    """
+    # Check if the JSON structure has "data" -> "metrics"
+    if "data" in data_obj and isinstance(data_obj["data"], dict):
+        original_metrics = data_obj["data"].get("metrics", [])
+        
+        # Convert the metrics list into a dict keyed by 'name'
+        # e.g. {"active_energy": {metricObj}, "step_count": {metricObj}, ...}
+        metric_map = {metric["name"]: metric for metric in original_metrics}
+        
+        # Build a new list of metrics in the desired order
+        reordered = []
+        for name in METRICS_ORDER:
+            if name in metric_map:
+                reordered.append(metric_map[name])
+        
+        # Assign the reordered list back to data_obj
+        data_obj["data"]["metrics"] = reordered
+    
+    return data_obj
+
 @app.route('/', methods=['GET'])
 def index():
     return (
@@ -19,19 +52,31 @@ def receive_apple_health_data():
     Receives JSON data from Apple Health export.
     Example: 
     {
-        "step_count": 1000,
-        "heart_rate": 72,
-        "sleep_hours": 7
+        "data": {
+            "metrics": [
+                {
+                    "name": "active_energy",
+                    "units": "kcal",
+                    "data": [...],
+                },
+                ...
+            ]
+        }
     }
     """
     data = request.json  # parse the JSON from request body
     if not data:
         return jsonify({"error": "No JSON data received"}), 400
     
-    # Store the data in memory (for demonstration)
-    apple_health_data_store.clear()  # clear previous data
+    # Clear the old data (as you do in your code)
+    apple_health_data_store.clear()
+    
+    # Reorder the metrics according to the fixed order
+    data = reorder_metrics(data)
+    
+    # Store the data in memory
     apple_health_data_store.append(data)
-
+    
     return jsonify({"message": "Data received successfully", "data": data}), 201
 
 @app.route('/applehealth', methods=['GET'])
